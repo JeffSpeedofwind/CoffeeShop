@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 
 # Set Streamlit page configuration
 st.set_page_config(layout="wide")
@@ -12,6 +11,7 @@ st.markdown("---")
 @st.cache_data
 def load_data(file_path):
     df = pd.read_csv(file_path)
+    # Ensure date/datetime columns are correctly formatted
     df['date'] = pd.to_datetime(df['date'])
     df['datetime'] = pd.to_datetime(df['datetime'])
     return df
@@ -36,17 +36,20 @@ with col3:
 
 st.markdown("---")
 
-# Line Chart of Sales Over Time
+# Line Chart of Sales Over Time (using st.line_chart)
 st.header("📈 Daily Sales Trend")
+
+# 1. Aggregate data for the chart
 daily_sales = data.groupby('date')['money'].sum().reset_index()
-fig = px.line(
-    daily_sales,
-    x='date',
-    y='money',
-    title="Daily Sales Over Time",
-    labels={'date': 'Date', 'money': 'Total Daily Sales ($)'}
-)
-st.plotly_chart(fig, use_container_width=True)
+
+# 2. Set the 'date' column as the index for st.line_chart to correctly treat it as the x-axis
+daily_sales_indexed = daily_sales.set_index('date')
+
+# 3. Rename the column for better chart legend
+daily_sales_indexed.columns = ['Total Daily Sales ($)']
+
+# 4. Create the simple Streamlit line chart
+st.line_chart(daily_sales_indexed)
 
 # Data Table
 st.header("📋 Raw Data")
